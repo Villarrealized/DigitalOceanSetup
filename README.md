@@ -72,7 +72,7 @@ curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/n
 mkdir /etc/nginx
 
 # Download and create the nginx template file needed
-curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/nginx.tmpl
+curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/nginx.tmpl > /etc/nginx/nginx.tmpl
 ```
 
 Now that everything is setup for our nginx reverse proxy server to run, you can boot it up.
