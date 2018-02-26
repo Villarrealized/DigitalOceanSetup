@@ -257,10 +257,9 @@ lsblk
 # Replace 'sda' with the name of the block you want to format
 # This will probably be sda if it is the first volume you have added
 fdisk /dev/sda
-#Enter n for new partition
-#Command (m for help): n
-#Accept the defaults by pressing enter several times
-#Enter 'w' to write and save changes or 'q' to quit without saving changes
+# Enter 'n' for new partition
+# Accept the defaults by pressing enter several times
+# Enter 'w' to write and save changes or 'q' to quit without saving changes
 
 # List the block devices. You should now see 'sda1' or similar under sda
 lsblk
