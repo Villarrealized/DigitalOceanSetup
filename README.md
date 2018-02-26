@@ -38,7 +38,7 @@ Host company-1 # The shortcut name you pass to ssh to login
 Now logging in is painless:
 
 ```bash
-# log in using our config host alias
+# log in using your config host alias
 ssh company-1
 ```
 
@@ -76,7 +76,7 @@ mkdir /etc/nginx
 curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/nginx.tmpl > /etc/nginx/nginx.tmpl
 ```
 
-Now that everything is setup for our nginx reverse proxy server to run, you can boot it up.
+Now that everything is setup for your nginx reverse proxy server to run, you can boot it up.
 
 ```bash
 # First, you need to add a docker network that all apps will share in common. You only need to do this once. nginx-proxy is the name of the network specified in the docker-compose.yml
