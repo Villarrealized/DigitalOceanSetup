@@ -7,10 +7,11 @@
       * [Installing Nginx Proxy And LetsEncrypt Auto SSL](#installing-nginx-proxy-and-letsencrypt-auto-ssl)
       * [Setting Up DNS](#setting-up-dns)
       * [Adding Applications](#adding-applications)
-      * [Applications With A MongoDB Database](#applications-with-a-mongodb-database)
+      * [Building And Compiling Vue Projects](#building-and-compiling-vue-projects)
+      * [Applications With A MongoDB Database](#applications-with-a-mongodb-database)    
    * [Starting Application](#starting-application)
       * [Inspecting MongoDB Databases](#inspecting-mongodb-databases)
-      * [Logging And Monitoring](#logging-and-monitoring)      
+      * [Logging And Monitoring](#logging-and-monitoring)     
  
 ## **Droplet Creation And Setup**
 
@@ -160,6 +161,43 @@ VIRTUAL_HOST=your-app-url.example.com
 LETSENCRYPT_HOST=your-app-url.example.com
 ```
 
+### __Building And Compiling Vue Projects__
+Before you can get a Vue.js app up and running you will need to build and compile it. To do this, you must install `node` and `npm`.
+
+```bash
+cd ~
+# Install Node from a PPA to get newer version (replace 9.x with different version number if necessary)
+curl -sL https://deb.nodesource.com/setup_9.x -o nodesource_setup.sh
+
+# Run the setup script
+bash nodesource_setup.sh
+
+#Remove the setup script
+rm nodesource_setup.sh
+
+# The PPA has been added so now install nodejs (will automatically install npm too)
+apt install nodejs
+
+# Necessary for compiling npm packages from source
+apt install build-essential
+```
+
+Now that node and npm are installed, install the npm packages in the client folder and build the production code.
+
+```bash
+# From the project root directory
+cd client
+
+# Install npm packages
+npm install
+
+# Back to root project dir
+cd ..
+
+# Run production build script
+./build-productions.sh
+```
+
 ### __Applications With A MongoDB Database__
 
 If the app has a MongoDB database it is recommended to add a seperate env file for mongo, ex. `mongo.env` with the following values to enable authentication and security:
@@ -181,6 +219,69 @@ You can easily generate a password for MongoDB with:
 # Add this command as an alias to your ~/.bash_profile, ~/.bashrc or ~/.bash_aliases for quick use
 LC_ALL=C < /dev/urandom tr -dc A-Za-z0-9 | head -c16; echo
 ```
+
+#### __Warnings And Optimizations__
+
+To avoid warnings about [Transparent Huge Page](https://docs.mongodb.com/master/tutorial/transparent-huge-pages/) and to ensure better MongoDB performance:
+```bash
+# Install sysfsutils
+apt install sysfsutils
+
+# Set Huge Page Enabled to 'never' for best MongoDB Performance
+echo "kernel/mm/transparent_hugepage/enabled = never" >> /etc/sysfs.conf
+
+# Set Huge Page Defrag to 'never' for best MongoDB Performance
+echo "kernel/mm/transparent_hugepage/defrag = never" >> /etc/sysfs.conf
+
+# Restart the sysfsutils service to enable changes
+systemctl restart sysfsutils.service
+```
+
+
+#### __Utilizing XFS To Avoid Performance Issues__
+There is an additional warning about using the XFS filesystem instead of EXT4 on Linux for better performance. See [XFS vs EXT4 – Comparing MongoDB Performance on AWS EC2](https://scalegrid.io/blog/xfs-vs-ext4-comparing-mongodb-performance-on-aws-ec2/?utm_campaign=Blog%20-%20XFS%20vs%20EXT4%20-%20Comparing%20MongoDB%20Performance%20on%20AWS%20EC2&utm_source=Stack%20Overflow%20-%20XFS%20vs%20EXT4&utm_medium=Blog%20-%20XFS%20vs%20EXT4) and [MongoDB on Linux](https://docs.mongodb.com/manual/administration/production-notes/#mongodb-on-linux)
+
+Switching to XFS is highly recommended, but isn't strictly necessary and may not produce a measurable improvement on a system with low demand, but with heavier workloads and a SSD, it should provide a significant performance increase.
+
+To utilize XFS, add a 1GB Volume through the DigitalOcean control panel. The space can always be increased, but NEVER decreased. 1GB should be plenty for most databases. The initial size without any data is about 333M. 
+
+If you are adding the volume after Droplet creation, do not follow the instructions provided for mounting and adding the drive. You will need to set it up slightly differently.
+
+Once the volume has been created, enter the following code to create the XFS filesystem and mount it permanently.
+
+```bash
+# Find out what block devices we have
+lsblk
+
+# Create a new disk partition on the volume you added
+# Replace 'sda' with the name of the block you want to format
+# This will probably be sda if it is the first volume you have added
+fdisk /dev/sda
+#Enter n for new partition
+#Command (m for help): n
+#Accept the defaults by pressing enter several times
+#Enter 'w' to write and save changes or 'q' to quit without saving changes
+
+# List the block devices. You should now see 'sda1' or similar under sda
+lsblk
+
+# Format the partition as XFS
+mkfs.xfs /dev/sda1
+
+# Create a local mount point for the drive
+mkdir -p /mnt/my-awesome-app-db
+
+# Mount the partition as XFS
+mount -t xfs /dev/sda1 /mnt/my-awesome-app-db
+
+# Verify that the XFS mount was succesful
+df -Th /mnt/my-awesome-app-db
+
+# Create a permanent mount point in fstab
+echo "/dev/sda1    /mnt/my-awesome-app-db    xfs    defaults,nofail,discard    0 0 " >> /etc/fstab
+```
+
+Now the disk is mounted and should remount on every reboot. Make sure your application is pointed to the mount point `/mnt/my-awesome-app-db` for storing its database files
 
 ## **Starting Application**
 
