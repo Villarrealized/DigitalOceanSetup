@@ -334,3 +334,16 @@ cat $(docker inspect --format='{{.LogPath}}' 6fae2e8c7898)
 To see a real-time log of containers and their resource usage, run `docker stats`.
 
 To view total system memory usage and stats, run `free -hwt`
+
+# __Local Development Setup__
+   * [Installing Docker](#installing-docker)
+   * [Installing Nginx Proxy](#installing-nginx-proxy)
+
+
+
+## __Installing Docker__
+You want to maintain a local development environment that mirrors our production environment as close as possible. To do this, you will install and use `Docker` for your development environment. Download and install [Docker Community Edition](https://store.docker.com/search?offering=community&type=edition) for your OS.
+
+Once Docker is installed, and you have set any preferences concerning the CPU, RAM, Disk Usage, etc. you are ready to get started.
+
+## __Installing Nginx Proxy__

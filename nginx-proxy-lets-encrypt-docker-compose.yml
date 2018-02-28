@@ -1,7 +1,7 @@
 version: '3'
 services:
   nginx-web:
-    image: nginx:stable-alpine
+    image: nginx:1.12-alpine
     container_name: nginx-web
     restart: always
     ports:
@@ -37,7 +37,7 @@ services:
         max-file: "10"
 
   nginx-letsencrypt:
-    image: jrcs/letsencrypt-nginx-proxy-companion:stable
+    image: jrcs/letsencrypt-nginx-proxy-companion:1.7
     container_name: nginx-letsencrypt
     restart: always
     volumes:
