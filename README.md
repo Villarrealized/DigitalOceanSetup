@@ -11,7 +11,8 @@
       * [Applications With A MongoDB Database](#applications-with-a-mongodb-database)    
    * [Starting Application](#starting-application)
       * [Inspecting MongoDB Databases](#inspecting-mongodb-databases)
-      * [Logging And Monitoring](#logging-and-monitoring)     
+      * [Logging And Monitoring](#logging-and-monitoring)
+    * [Local Development Setup](#local-development-setup)     
  
 ## **Droplet Creation And Setup**
 
