@@ -67,7 +67,7 @@ mkdir nginx-proxy-letsencrypt
 cd nginx-proxy-letsencrypt
 
 # Download and create a docker-compose from this repository
-curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/nginx-proxy-lets-encrypt-docker-compose.yml > docker-compose.yml
+curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/docker-compose.prod.yml > docker-compose.yml
 
 # Make a directory for nginx files
 mkdir /etc/nginx
@@ -250,7 +250,7 @@ If you are adding the volume after Droplet creation, do not follow the instructi
 Once the volume has been created, enter the following code to create the XFS filesystem and mount it permanently.
 
 ```bash
-# Find out what block devices we have
+# Find out what block devices you have
 lsblk
 
 # Create a new disk partition on the volume you added
@@ -338,12 +338,193 @@ To view total system memory usage and stats, run `free -hwt`
 # __Local Development Setup__
    * [Installing Docker](#installing-docker)
    * [Installing Nginx Proxy](#installing-nginx-proxy)
-
-
+   * [Preparing Your Application](#preparing-your-application)
+     * [Docker Setup](#docker-setup)
+     * [Adding Your Application URL to hosts file](#adding-your-application-url-to-hosts-file)
+     * [Creating SSL Certs For Your Application](#creating-ssl-certs-for-your-application)
+   * [Starting Nginx And Your Application](#starting-nginx-and-your-application)
 
 ## __Installing Docker__
-You want to maintain a local development environment that mirrors our production environment as close as possible. To do this, you will install and use `Docker` for your development environment. Download and install [Docker Community Edition](https://store.docker.com/search?offering=community&type=edition) for your OS.
+You want to maintain a local development environment that mirrors your production environment as close as possible. To do this, you will install and use `Docker` for your development environment. Download and install [Docker Community Edition](https://store.docker.com/search?offering=community&type=edition) for your OS.
 
 Once Docker is installed, and you have set any preferences concerning the CPU, RAM, Disk Usage, etc. you are ready to get started.
 
 ## __Installing Nginx Proxy__
+Setting up an Nginx proxy server will help you in mirroring your production setup as well as making it easier to develop locally. First, you will create a new directory and download the files needed for the nginx proxy server.
+
+```bash
+# Create a new dir called 'nginx'
+# You may create this dir whererver makes the most sense
+# The example will create it in the home directory
+cd ~
+
+mkdir nginx
+
+# Enter new dir
+cd nginx
+
+# Create a directory for nginx-proxy-template
+mkdir docker-nginx-proxy
+
+# Download docker-compose for development
+curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/docker-compose.dev.yml > docker-nginx-proxy/docker-compose.yml
+
+# Download Nginx template file
+curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/nginx.tmpl > nginx.tmpl
+```
+
+## __Preparing Your Application__
+
+Before you can run your application on the behind the nginx-proxy server, you will first need to setup a few different things in your application and on your local machine.
+
+### __Docker Setup__
+`Dockerfile` and a `docker-compose.yml` in your application's code directory. Make sure The `Dockerfile` exposes port `80` and the `docker-compose` exposes port `80` also. Ensure that the application has an environment variable `VIRTUAL_HOST` that equals the url you would like to visit for the application. For example:
+```bash
+# In application .env file
+
+# Whatever you put here is what Nginx will try to resolve for
+VIRTUAL_HOST=my-awesome-app.dev.local
+
+# Make sure your application is listening on port 80 for traffic
+PORT=80
+```
+
+### __Adding Your Application URL to hosts file__
+Additionally, just as you made each domain's DNS A record point to the production server's IP, you will need to make sure that the dev url you are using resolves to your localhost. Modify `/etc/hosts` on Mac/Linux and `c:\WINDOWS\system32\drivers\etc\hosts` on Windows.
+```bash
+# In /etc/hosts
+# Add an entry to 127.0.0.1 with your application(s) local url(s) you want
+127.0.0.1       localhost my-awesome-app.dev.local my-other-awesome-app.dev.local
+```
+You can verify that this works by pinging the new address:
+```bash
+# Ping dev url to make sure it works
+ping my-awesome-app.dev.local
+
+# Sample output, if successful
+PING my-awesome-app.dev.local (127.0.0.1): 56 data bytes
+64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.073 ms
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.116 ms
+^C
+```
+
+### __Creating SSL Certs For Your Application__
+At this point, you could simply `docker-compose up` for both your `nginx-proxy` and custom application and all should work fine. However, your production application has SSL enabled through LetsEncrypt, but your local environment does not. This can create issues when testing and since you want your development enviroment as close as possible to production, you should add some self-signed SSL certs for your app. This is a little bit more difficult than the nice container you used in production, but it's not too bad once you set it up.
+
+First, you need to become your own certificate authority, so that you can issue certs for your local domains! 
+```bash
+# Change directory to where you created the 'nginx' folder from earlier
+cd ~/nginx
+
+# Create a directory to hold your certificates and certificate authority credentials
+mkdir -p certs/LocalCertAuthority
+
+# Enter new dir
+cd certs/LocalCertAuthority
+
+# Create a RSA-2048 key for generating the Root SSL certificate
+# You will be prompted for a passphrase that wou will need to enter
+# Each time that you use this key to generate a certificate
+openssl genrsa -des3 -out rootCA.key 2048
+
+# Generate a Root SSL cert. Valid for 1000 days or however long you like...
+# You will be prompted for other optional info. Enter or accept defaults.
+openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1000 -out rootCA.pem
+```
+
+Before you can use the new Root SSl certificate to generate certificates for your local domains, you must have your computer trust the root certificate. For Mac, open `Keychain Access` > `File` > `Import Items` Select `rootCA.pem` that you just created. Double click the imported certificate and change `Trust` > `When using this certificate` to `Always Trust`. For Windows, use `start > run >  mmc` and follow the directions [here](http://www.databasemart.com/howto/SQLoverssl/How_To_Install_Trusted_Root_Certification_Authority_With_MMC.aspx.)
+
+Now create a new directory specific to your app's domain name. Alternatively, you can also create a wildcard certificate which will cover all subdomains of a domain. ex. a wildcard cert for `dev.local` will cover `my-awesome-app.dev.local`, `my-other-awesome-app.dev.local`, `totally-sweet-app.dev.local` , etc. Since this is the most efficient and not any harder to setup, that is what you will do here. 
+
+```bash
+# switch back to main nginx/certs directory
+cd ..
+
+# Create directory for dev.local wildcard domain certs and info
+# The name of this directory doesn't matter
+mkdir dev.local.wildcard
+
+# Switch to this directory
+cd dev.local.wildcard
+```
+Next, create an OpensSSL configuration file that is needed when creating the certificate
+
+```bash
+nano dev.local.csr.conf
+
+# Enter the following in the above file
+# The only thing that NEEDS to be changed is the CN field
+# Change this to reflect the domain you want to create the cert for
+# In this case you will use *.dev.local to create a cert for all subdomains of dev.local
+[req]
+default_bits = 2048
+prompt = no
+default_md = sha256
+distinguished_name = dn
+
+[dn]
+C=US
+ST=RandomState
+L=RandomCity
+O=RandomOrganization
+OU=RandomOrganizationUnit
+emailAddress=hello@example.com
+CN = *.dev.local
+```
+
+Next, create a v3.ext file in order to create a X509 v3 certificate
+
+```bash
+nano v3.ext
+# Contents of file
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = dev.local
+DNS.2 = *.dev.local
+```
+Now you will create a certificate key and certificate signing request for *.dev.local (or whatever domain you chose):
+```bash
+openssl req -new -sha256 -nodes -out dev.local.csr -newkey rsa:2048 -keyout dev.local.key -config 
+```
+
+Finally, you must request a certificate using your certificate signing request you just created. You need to issue this request to the Root SSL certificate you created earlier:
+
+```bash
+openssl x509 -req -in dev.local.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out dev.local.crt -days 500 -sha256 -extfile v3.ext
+```
+
+Verify that `dev.local.key` and `dev.local.crt` exist in your current directory with `ls`.
+
+Now copy both the key and the crt to the `nginx/certs` directory. This is where nginx will look for certs to use for your applications and the names of the key and the crt must be patterned after your local domain. For a wildcard cert it must be named after the root domain.
+
+```bash
+# Copy the certs to the nginx/certs directory
+cp dev.local.key dev.local.crt ..
+```
+
+## __Starting Nginx And Your Application__
+
+You are finally ready to bring up your local application with a custom domain name and a local, self-signed cert!
+
+```bash
+# Change directories to where you put the nginx-proxy
+cd ~/nginx/docker-nginx-proxy
+
+# Bring up the nginx proxy container and detach
+docker-compose up -d
+
+# Change your directory to your application where your docker-compose lives
+cd ~/my-awesome-app
+
+# Build and run your app and detach
+docker-compose build && docker-compose up -d
+
+# Verify everything is working okay (CTRL+C to exit logs)
+docker compose logs -f
+```
+
+If all went well, you should now be able to visit your application in your browser ex. https://my-awesome-app.dev.local
