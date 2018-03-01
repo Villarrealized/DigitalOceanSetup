@@ -495,7 +495,8 @@ openssl req -new -sha256 -nodes -out dev.local.csr -newkey rsa:2048 -keyout dev.
 Finally, you must request a certificate using your certificate signing request you just created. You need to issue this request to the Root SSL certificate you created earlier:
 
 ```bash
-openssl x509 -req -in dev.local.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out dev.local.crt -days 500 -sha256 -extfile v3.ext
+# Create certificate by making request to Root CA
+openssl x509 -req -in dev.local.csr -CA ../LocalCertAuthority/rootCA.pem -CAkey ../LocalCertAuthority/rootCA.key -CAcreateserial -out dev.local.crt -days 500 -sha256 -extfile v3.ext
 ```
 
 Verify that `dev.local.key` and `dev.local.crt` exist in your current directory with `ls`.
