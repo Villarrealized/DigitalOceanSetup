@@ -390,7 +390,7 @@ VIRTUAL_HOST=my-awesome-app.dev.local
 PORT=80
 ```
 
-### __Adding Your Application URL to hosts file__
+### __Adding Your Application URL to system hosts file__
 Additionally, just as you made each domain's DNS A record point to the production server's IP, you will need to make sure that the dev url you are using resolves to your localhost. Modify `/etc/hosts` on Mac/Linux and `c:\WINDOWS\system32\drivers\etc\hosts` on Windows.
 ```bash
 # In /etc/hosts
