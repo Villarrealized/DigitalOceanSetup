@@ -17,7 +17,7 @@
 ## **Droplet Creation And Setup**
 
 ### __Creating Your Droplet__
-Select `Create > Droplets`. Choose `One-click apps > Docker`. Choose appropriate droplet size and data center. `San Francisco 1 & 2` is best because of proximity. Check `Monitoring` and `Backups`. Make sure to select SSH keys for connecting to this droplet. Add a new one if necessary. Change the hostname to something more appropriate with a consistent naming convention. Ex. `company-0`, `company-1`. Click `Create`.
+Select `Create > Droplets`. Choose `One-click apps > Docker`. Choose appropriate droplet size and data center. `San Francisco 2` is best because of proximity and the ability to create `Volumes` for your database. Check `Monitoring` and `Backups`. Make sure to select SSH keys for connecting to this droplet. Add a new one if necessary. Change the hostname to something more appropriate with a consistent naming convention. Ex. `company-0`, `company-1`. Click `Create`.
 
 ### __Logging In To Your Droplet__
 You can now connect to your server via ssh.
@@ -451,6 +451,7 @@ cd dev.local.wildcard
 Next, create an OpensSSL configuration file that is needed when creating the certificate
 
 ```bash
+# I use nano, feel free to use whatever text editor you prefer
 nano dev.local.csr.conf
 
 # Enter the following in the above file
@@ -476,6 +477,7 @@ CN = *.dev.local
 Next, create a v3.ext file in order to create a X509 v3 certificate
 
 ```bash
+# Create and edit a new file 'v3.ext'
 nano v3.ext
 # Contents of file
 authorityKeyIdentifier=keyid,issuer
