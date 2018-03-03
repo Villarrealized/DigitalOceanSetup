@@ -37,7 +37,7 @@ services:
         max-file: "10"
 
   nginx-letsencrypt:
-    image: jrcs/letsencrypt-nginx-proxy-companion:1.7
+    image: jrcs/letsencrypt-nginx-proxy-companion:latest
     container_name: nginx-letsencrypt
     restart: always
     volumes:

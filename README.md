@@ -379,7 +379,7 @@ curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/n
 Before you can run your application on the behind the nginx-proxy server, you will first need to setup a few different things in your application and on your local machine.
 
 ### __Docker Setup__
-`Dockerfile` and a `docker-compose.yml` in your application's code directory. Make sure The `Dockerfile` exposes port `80` and the `docker-compose` exposes port `80` also. Ensure that the application has an environment variable `VIRTUAL_HOST` that equals the url you would like to visit for the application. For example:
+Make sure you have a `Dockerfile` and a `docker-compose.yml` in your application's code directory. Make sure The `Dockerfile` exposes port `80` and the `docker-compose` exposes port `80` also. Ensure that the application has an environment variable `VIRTUAL_HOST` that equals the url you would like to visit for the application. For example:
 ```bash
 # In application .env file
 
@@ -424,7 +424,7 @@ mkdir -p certs/LocalCertAuthority
 cd certs/LocalCertAuthority
 
 # Create a RSA-2048 key for generating the Root SSL certificate
-# You will be prompted for a passphrase that wou will need to enter
+# You will be prompted for a passphrase that you will need to enter
 # Each time that you use this key to generate a certificate
 openssl genrsa -des3 -out rootCA.key 2048
 
@@ -433,7 +433,7 @@ openssl genrsa -des3 -out rootCA.key 2048
 openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1000 -out rootCA.pem
 ```
 
-Before you can use the new Root SSl certificate to generate certificates for your local domains, you must have your computer trust the root certificate. For Mac, open `Keychain Access` > `File` > `Import Items` Select `rootCA.pem` that you just created. Double click the imported certificate and change `Trust` > `When using this certificate` to `Always Trust`. For Windows, use `start > run >  mmc` and follow the directions [here](http://www.databasemart.com/howto/SQLoverssl/How_To_Install_Trusted_Root_Certification_Authority_With_MMC.aspx.)
+Before you can use the new Root SSl certificate to generate certificates for your local domains, you must have your computer trust the root certificate. For Mac, open `Keychain Access` > `File` > `Import Items` Select `rootCA.pem` that you just created. Double click the imported certificate and change `Trust` > `When using this certificate` to `Always Trust`. For Windows, use `start > run >  mmc` and follow the directions [here](http://www.databasemart.com/howto/SQLoverssl/How_To_Install_Trusted_Root_Certification_Authority_With_MMC.aspx)
 
 Now create a new directory specific to your app's domain name. Alternatively, you can also create a wildcard certificate which will cover all subdomains of a domain. ex. a wildcard cert for `dev.local` will cover `my-awesome-app.dev.local`, `my-other-awesome-app.dev.local`, `totally-sweet-app.dev.local` , etc. Since this is the most efficient and not any harder to setup, that is what you will do here. 
 
@@ -491,7 +491,7 @@ DNS.2 = *.dev.local
 ```
 Now you will create a certificate key and certificate signing request for *.dev.local (or whatever domain you chose):
 ```bash
-openssl req -new -sha256 -nodes -out dev.local.csr -newkey rsa:2048 -keyout dev.local.key -config 
+openssl req -new -sha256 -nodes -out dev.local.csr -newkey rsa:2048 -keyout dev.local.key -config dev.local.csr.conf 
 ```
 
 Finally, you must request a certificate using your certificate signing request you just created. You need to issue this request to the Root SSL certificate you created earlier:
