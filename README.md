@@ -507,7 +507,6 @@ Now copy both the key and the crt to the `nginx/certs` directory. This is where 
 
 ```bash
 # Copy the certs to the nginx/certs directory
-# dev.local.crt might be dev.local.csr on linux
 cp dev.local.key dev.local.crt ..
 ```
 
