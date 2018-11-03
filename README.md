@@ -12,7 +12,7 @@
    * [Starting Application](#starting-application)
       * [Inspecting MongoDB Databases](#inspecting-mongodb-databases)
       * [Logging And Monitoring](#logging-and-monitoring)
-    * [Local Development Setup](#local-development-setup)     
+      * [Local Development Setup](#local-development-setup)     
  
 ## **Droplet Creation And Setup**
 
@@ -433,7 +433,7 @@ openssl genrsa -des3 -out rootCA.key 2048
 openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1000 -out rootCA.pem
 ```
 
-Before you can use the new Root SSl certificate to generate certificates for your local domains, you must have your computer trust the root certificate. For Mac, open `Keychain Access` > `File` > `Import Items` Select `rootCA.pem` that you just created. Double click the imported certificate and change `Trust` > `When using this certificate` to `Always Trust`. For Windows, use `start > run >  mmc` and follow the directions [here](http://www.databasemart.com/howto/SQLoverssl/How_To_Install_Trusted_Root_Certification_Authority_With_MMC.aspx)
+Before you can use the new Root SSl certificate to generate certificates for your local domains, you must have your computer trust the root certificate. For Mac, open `Keychain Access` > `File` > `Import Items` Select `rootCA.pem` that you just created. Double click the imported certificate and change `Trust` > `When using this certificate` to `Always Trust`. For Windows, use `start > run >  mmc` and follow the directions [here](http://www.databasemart.com/howto/SQLoverssl/How_To_Install_Trusted_Root_Certification_Authority_With_MMC.aspx). For Linux, copy `rootCA.pem` to `/usr/local/share/ca-certificates` and rename it to `rootCA.crt`. Then run `sudo update-ca-certificates` for the system to grab the new certificate.
 
 Now create a new directory specific to your app's domain name. Alternatively, you can also create a wildcard certificate which will cover all subdomains of a domain. ex. a wildcard cert for `dev.local` will cover `my-awesome-app.dev.local`, `my-other-awesome-app.dev.local`, `totally-sweet-app.dev.local` , etc. Since this is the most efficient and not any harder to setup, that is what you will do here. 
 
@@ -507,6 +507,7 @@ Now copy both the key and the crt to the `nginx/certs` directory. This is where 
 
 ```bash
 # Copy the certs to the nginx/certs directory
+# dev.local.crt might be dev.local.csr on linux
 cp dev.local.key dev.local.crt ..
 ```
 
