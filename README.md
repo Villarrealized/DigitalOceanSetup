@@ -8,7 +8,8 @@
       * [Setting Up DNS](#setting-up-dns)
       * [Adding Applications](#adding-applications)
       * [Building And Compiling Vue Projects](#building-and-compiling-vue-projects)
-      * [Applications With A MongoDB Database](#applications-with-a-mongodb-database)    
+      * [Applications With A Postgres Database](#applications-with-a-postgres-database)
+      * [Applications With A MongoDB Database](#applications-with-a-mongodb-database)
    * [Starting Application](#starting-application)
       * [Inspecting MongoDB Databases](#inspecting-mongodb-databases)
       * [Logging And Monitoring](#logging-and-monitoring)
@@ -198,6 +199,65 @@ cd ..
 # Run production build script
 ./build-productions.sh
 ```
+
+### __Applications With A Postgres Database__
+
+If the app has a Postgres database it is recommended to add a seperate env file for mongo, ex. `postgres.env` with the following values to enable authentication and security:
+```bash
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=tAeKP6kN7cfryxfC [replace with your own]
+```
+
+And then adjust your `DATABASE_URL` in your app's `.env` file like so : 
+```bash
+DATABASE_URL=postgres://postgres:enter_password_here@db_host_name_here:5432/DB_NAME
+```
+
+You can easily generate a password with:
+```bash
+# Generate random 16 character string
+# Add this command as an alias to your ~/.bash_profile, ~/.bashrc or ~/.bash_aliases for quick use
+LC_ALL=C < /dev/urandom tr -dc A-Za-z0-9 | head -c16; echo
+```
+
+#### __Create Volume and Mount__
+
+If you are adding the volume after Droplet creation, do not follow the instructions provided for mounting and adding the drive. You will need to set it up slightly differently.
+
+Once the volume has been created, enter the following code to create the XFS filesystem and mount it permanently.
+
+```bash
+# Find out what block devices you have
+lsblk
+
+# Create a new disk partition on the volume you added
+# Replace 'sda' with the name of the block you want to format
+# This will probably be sda if it is the first volume you have added
+fdisk /dev/sda
+# Enter 'n' for new partition
+# Accept the defaults by pressing enter several times
+# Enter 'w' to write and save changes or 'q' to quit without saving changes
+
+# List the block devices. You should now see 'sda1' or similar under sda
+lsblk
+
+# Format the partition as EXT4
+mkfs.ext4 /dev/sda1
+
+# Create a local mount point for the drive
+mkdir -p /mnt/my-awesome-app-db
+
+# Mount the partition as XFS
+mount -t ext4 /dev/sda1 /mnt/my-awesome-app-db
+
+# Verify that the XFS mount was succesful
+df -Th /mnt/my-awesome-app-db
+
+# Create a permanent mount point in fstab
+echo "/dev/sda1    /mnt/my-awesome-app-db    ext4    defaults,nofail,discard    0 0 " >> /etc/fstab
+```
+
+Now the disk is mounted and should remount on every reboot. Make sure your application is pointed to the mount point `/mnt/my-awesome-app-db` for storing its database files
 
 ### __Applications With A MongoDB Database__
 
