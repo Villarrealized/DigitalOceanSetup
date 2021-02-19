@@ -13,8 +13,8 @@
    * [Starting Application](#starting-application)
       * [Inspecting MongoDB Databases](#inspecting-mongodb-databases)
       * [Logging And Monitoring](#logging-and-monitoring)
-      * [Local Development Setup](#local-development-setup)     
- 
+      * [Local Development Setup](#local-development-setup)
+
 ## **Droplet Creation And Setup**
 
 ### __Creating Your Droplet__
@@ -32,7 +32,7 @@ To make it easier to connect to the server, add an entry to your `~/.ssh/config`
 
 ```bash
 # Company 1 DigitalOcean Server
-Host company-1 # The shortcut name you pass to ssh to login 
+Host company-1 # The shortcut name you pass to ssh to login
     HostName 93.184.216.34 # The IP assigned to your droplet
     User root # The user to log in as, should be root
     IdentityFile ~/.ssh/id_rsa # your private ssh key for connecting
@@ -121,7 +121,7 @@ echo "return 301 https://www.example.com$request_uri;" > example.com
 ### __Adding Applications__
 Now that the nginx proxy server is up and running, you can add applications to be served up.
 
-If your repo is private and you use ssh to connect, you will need to create an ssh key on this server and then upload the public key to BitBucket. 
+If your repo is private and you use ssh to connect, you will need to create an ssh key on this server and then upload the public key to BitBucket.
 
 ```bash
 # Generate SSH key on server
@@ -202,13 +202,13 @@ cd ..
 
 ### __Applications With A Postgres Database__
 
-If the app has a Postgres database it is recommended to add a seperate env file for mongo, ex. `postgres.env` with the following values to enable authentication and security:
+If the app has a Postgres database it is recommended to add a seperate env file, ex. `postgres.env` with the following values to enable authentication and security:
 ```bash
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=tAeKP6kN7cfryxfC [replace with your own]
 ```
 
-And then adjust your `DATABASE_URL` in your app's `.env` file like so : 
+And then adjust your `DATABASE_URL` in your app's `.env` file like so :
 ```bash
 DATABASE_URL=postgres://postgres:enter_password_here@db_host_name_here:5432/DB_NAME
 ```
@@ -222,9 +222,11 @@ LC_ALL=C < /dev/urandom tr -dc A-Za-z0-9 | head -c16; echo
 
 #### __Create Volume and Mount__
 
-If you are adding the volume after Droplet creation, do not follow the instructions provided for mounting and adding the drive. You will need to set it up slightly differently.
+If you are adding the volume after Droplet creation choose to automatically format and mount the volume as ext4 for easiest setup.
 
-Once the volume has been created, enter the following code to create the XFS filesystem and mount it permanently.
+If you need to manually mount it, make sure to use volume identifiers, NOT the traditional `sd*` names. See here: https://www.digitalocean.com/docs/volumes/resources/naming/
+
+Upon reboot, `sd*` volumes may be mounted differently and is not a reliable to mount. Use `/dev/disk/by-id/*` instead.
 
 ```bash
 # Find out what block devices you have
@@ -232,7 +234,7 @@ lsblk
 
 # Create a new disk partition on the volume you added
 # Replace 'sda' with the name of the block you want to format
-# This will probably be sda if it is the first volume you have added
+# See above: DO NOT use sd* names, replace with appropriate /dev/disk/by-id names
 fdisk /dev/sda
 # Enter 'n' for new partition
 # Accept the defaults by pressing enter several times
@@ -247,10 +249,10 @@ mkfs.ext4 /dev/sda1
 # Create a local mount point for the drive
 mkdir -p /mnt/my-awesome-app-db
 
-# Mount the partition as XFS
+# Mount the partition as ext4
 mount -t ext4 /dev/sda1 /mnt/my-awesome-app-db
 
-# Verify that the XFS mount was succesful
+# Verify that the ext4 mount was succesful
 df -Th /mnt/my-awesome-app-db
 
 # Create a permanent mount point in fstab
@@ -269,7 +271,7 @@ MONGO_INITDB_ROOT_USERNAME=admin
 MONGO_INITDB_ROOT_PASSWORD=tAeKP6kN7cfryxfC
 ```
 
-And then adjust your `MONGODB_URI` in your app's `.env` file like so : 
+And then adjust your `MONGODB_URI` in your app's `.env` file like so :
 ```bash
 MONGODB_URI=mongodb://admin:tAeKP6kN7cfryxfC@db:27017/db-name?authSource=admin
 ```
@@ -304,19 +306,20 @@ There is an additional warning about using the XFS filesystem instead of EXT4 on
 
 Switching to XFS is highly recommended, but isn't strictly necessary and may not produce a measurable improvement on a system with low demand, but with heavier workloads and a SSD, it should provide a significant performance increase.
 
-To utilize XFS, add a 1GB Volume through the DigitalOcean control panel. The space can always be increased, but NEVER decreased. 1GB should be plenty for most databases. The initial size without any data is about 333M. 
+To utilize XFS, add a 1GB Volume through the DigitalOcean control panel. The space can always be increased, but NEVER decreased. 1GB should be plenty for most databases. The initial size without any data is about 333M.
 
-If you are adding the volume after Droplet creation, do not follow the instructions provided for mounting and adding the drive. You will need to set it up slightly differently.
+If you are adding the volume after Droplet creation choose to automatically format and mount the volume as xfs for easiest setup.
 
-Once the volume has been created, enter the following code to create the XFS filesystem and mount it permanently.
+If you need to manually mount it, make sure to use volume identifiers, NOT the traditional `sd*` names. See here: https://www.digitalocean.com/docs/volumes/resources/naming/
+
+Upon reboot, `sd*` volumes may be mounted differently and is not a reliable to mount. Use `/dev/disk/by-id/*` instead.
 
 ```bash
 # Find out what block devices you have
 lsblk
 
 # Create a new disk partition on the volume you added
-# Replace 'sda' with the name of the block you want to format
-# This will probably be sda if it is the first volume you have added
+# See above: DO NOT use sd* names, replace with appropriate /dev/disk/by-id names
 fdisk /dev/sda
 # Enter 'n' for new partition
 # Accept the defaults by pressing enter several times
@@ -352,7 +355,7 @@ If you need to bring down the application for any reason, make sure you are in t
 ### __Inspecting MongoDB Databases__
 If using a tool like Studio3T to inspect and view your MongoDB databases, you can connect to the databse by creating a new connection and selecting `SSH Tunnel`
 
-`SSH Address`: Enter your server ip. Leave `Port` at `22` 
+`SSH Address`: Enter your server ip. Leave `Port` at `22`
 
 `SSH User name`: root
 
@@ -472,7 +475,7 @@ PING my-awesome-app.dev.local (127.0.0.1): 56 data bytes
 ### __Creating SSL Certs For Your Application__
 At this point, you could simply `docker-compose up` for both your `nginx-proxy` and custom application and all should work fine. However, your production application has SSL enabled through LetsEncrypt, but your local environment does not. This can create issues when testing and since you want your development enviroment as close as possible to production, you should add some self-signed SSL certs for your app. This is a little bit more difficult than the nice container you used in production, but it's not too bad once you set it up.
 
-First, you need to become your own certificate authority, so that you can issue certs for your local domains! 
+First, you need to become your own certificate authority, so that you can issue certs for your local domains!
 ```bash
 # Change directory to where you created the 'nginx' folder from earlier
 cd ~/nginx
@@ -495,7 +498,7 @@ openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1000 -out rootCA.pem
 
 Before you can use the new Root SSl certificate to generate certificates for your local domains, you must have your computer trust the root certificate. For Mac, open `Keychain Access` > `File` > `Import Items` Select `rootCA.pem` that you just created. Double click the imported certificate and change `Trust` > `When using this certificate` to `Always Trust`. For Windows, use `start > run >  mmc` and follow the directions [here](http://www.databasemart.com/howto/SQLoverssl/How_To_Install_Trusted_Root_Certification_Authority_With_MMC.aspx). For Linux, copy `rootCA.pem` to `/usr/local/share/ca-certificates` and rename it to `rootCA.crt`. Then run `sudo update-ca-certificates` for the system to grab the new certificate.
 
-Now create a new directory specific to your app's domain name. Alternatively, you can also create a wildcard certificate which will cover all subdomains of a domain. ex. a wildcard cert for `dev.local` will cover `my-awesome-app.dev.local`, `my-other-awesome-app.dev.local`, `totally-sweet-app.dev.local` , etc. Since this is the most efficient and not any harder to setup, that is what you will do here. 
+Now create a new directory specific to your app's domain name. Alternatively, you can also create a wildcard certificate which will cover all subdomains of a domain. ex. a wildcard cert for `dev.local` will cover `my-awesome-app.dev.local`, `my-other-awesome-app.dev.local`, `totally-sweet-app.dev.local` , etc. Since this is the most efficient and not any harder to setup, that is what you will do here.
 
 ```bash
 # switch back to main nginx/certs directory
@@ -551,7 +554,7 @@ DNS.2 = *.dev.local
 ```
 Now you will create a certificate key and certificate signing request for *.dev.local (or whatever domain you chose):
 ```bash
-openssl req -new -sha256 -nodes -out dev.local.csr -newkey rsa:2048 -keyout dev.local.key -config dev.local.csr.conf 
+openssl req -new -sha256 -nodes -out dev.local.csr -newkey rsa:2048 -keyout dev.local.key -config dev.local.csr.conf
 ```
 
 Finally, you must request a certificate using your certificate signing request you just created. You need to issue this request to the Root SSL certificate you created earlier:
