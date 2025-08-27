@@ -70,12 +70,6 @@ cd nginx-proxy-letsencrypt
 
 # Download and create a docker-compose from this repository
 curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/docker-compose.prod.yml > docker-compose.yml
-
-# Make a directory for nginx files
-mkdir /etc/nginx
-
-# Download and create the nginx template file needed
-curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/nginx.tmpl > /etc/nginx/nginx.tmpl
 ```
 
 Now that everything is setup for your nginx reverse proxy server to run, you can boot it up.
@@ -417,24 +411,11 @@ Once Docker is installed, and you have set any preferences concerning the CPU, R
 Setting up an Nginx proxy server will help you in mirroring your production setup as well as making it easier to develop locally. First, you will create a new directory and download the files needed for the nginx proxy server.
 
 ```bash
-# Create a new dir called 'nginx'
-# You may create this dir whererver makes the most sense
-# The example will create it in the home directory
-cd ~
-
-mkdir nginx
-
-# Enter new dir
-cd nginx
-
 # Create a directory for nginx-proxy-template
 mkdir docker-nginx-proxy
 
 # Download docker-compose for development
 curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/docker-compose.dev.yml > docker-nginx-proxy/docker-compose.yml
-
-# Download Nginx template file
-curl https://raw.githubusercontent.com/Villarrealized/DigitalOceanSetup/master/nginx.tmpl > nginx.tmpl
 ```
 
 ## __Preparing Your Application__
